@@ -55,7 +55,8 @@ Seedance Mini 文生视频示例，标准版将 `model` 改为 `seedance-2.0`：
 - [秘塔模型实时配置](https://metaso.cn/api/video-generation/models)
 - [MiniMax H3 提示词基础指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md)
 - [MiniMax H3 提示词参考指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_ref_en.md)
-- [Seedance 2.0 创作指南（Runway，提示词写法最具体）](https://help.runwayml.com/hc/en-us/articles/50488490233363-Creating-with-Seedance-2.0)
+- [Seedance 2.0 系列提示词指南（火山方舟官方，首选）](https://docs.volcengine.com/docs/ark/seedance-2-0-prompt-guide?lang=zh)
+- [Seedance 2.0 创作指南（Runway，可作补充参考）](https://help.runwayml.com/hc/en-us/articles/50488490233363-Creating-with-Seedance-2.0)
 - [Seedance 2.0 官方介绍](https://seed.bytedance.com/en/seedance2_0)
 - [MiniMax 多模态请求规范](https://platform.minimaxi.com/docs/api-reference/video-generation-v2-create)
 - API 地址固定为 `https://metaso.cn/api/minimax`；网页内部接口与公开 API 不是同一套协议。
