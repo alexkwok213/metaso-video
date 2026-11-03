@@ -2,7 +2,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-path = Path(__file__).resolve().parents[1] / 'metaso-h3/scripts/metaso.py'
+path = Path(__file__).resolve().parents[1] / 'metaso-video/scripts/metaso.py'
 spec = importlib.util.spec_from_file_location('metaso', path)
 metaso = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(metaso)
