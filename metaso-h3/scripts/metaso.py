@@ -19,7 +19,7 @@ def api(path, payload=None):
     if not key and CREDENTIALS.exists():
         key = json.loads(CREDENTIALS.read_text())["api_key"]
     if not key:
-        raise ValueError("METASO API key is not configured")
+        raise ValueError("未配置 METASO API Key。请参照技能说明在本机配置 METASO_API_KEY 或凭据文件；不要在聊天中发送密钥。")
     request = urllib.request.Request(
         BASE + path,
         data=json.dumps(payload).encode() if payload is not None else None,
@@ -38,14 +38,21 @@ def api(path, payload=None):
 
 
 def validate(payload):
-    if payload.get("model") != "MiniMax-H3":
-        raise ValueError("This integration uses model MiniMax-H3")
+    model = payload.get("model")
+    resolutions = {
+        "MiniMax-H3": {"480p", "768P", "1080p", "2K"},
+        "seedance-2.0-mini": {"480p", "720p"},
+        "seedance-2.0": {"480p", "720p", "1080p", "4k"},
+    }
+    if model not in resolutions:
+        raise ValueError("Unsupported model")
     resolution = payload.get("resolution")
-    if resolution not in {"480p", "768P", "1080p", "2K"}:
-        raise ValueError("Invalid resolution")
+    if resolution not in resolutions[model]:
+        raise ValueError("Invalid resolution for the selected model")
     duration = payload.get("duration")
-    if type(duration) is not int or not 4 <= duration <= (15 if resolution == "2K" else 30):
-        raise ValueError("Invalid duration for the selected resolution")
+    maximum = 30 if model == "MiniMax-H3" and resolution != "2K" else 15
+    if type(duration) is not int or not 4 <= duration <= maximum:
+        raise ValueError("Invalid duration for the selected model and resolution")
     if not isinstance(payload.get("content"), list) or not payload["content"]:
         raise ValueError("A nonempty content array is required")
 
