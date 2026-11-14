@@ -1,6 +1,6 @@
 ---
 name: metaso-video
-description: 使用用户的 METASO（metaso.cn）账号调用 MiniMax H3、Seedance 2.0 Mini 或 Seedance 2.0 标准版生成视频、查询任务和下载结果时使用。
+description: 使用 METASO（metaso.cn）账号生成视频、上传参考素材、将 H3 视频再生成 2K、查询余额或任务及下载结果时使用。
 ---
 
 # METASO 视频生成
@@ -21,11 +21,13 @@ python3 -c 'import getpass,json,os,pathlib; p=pathlib.Path.home()/".config/metas
 
 | 模型 | 请求中的 `model` | 分辨率 | 时长 |
 |---|---|---|---|
-| MiniMax H3 | `MiniMax-H3` | `480p`、`768P`、`1080p`、`2K` | 4–30 整数秒；2K 最长 15 秒 |
+| MiniMax H3 | `MiniMax-H3` | `480p`、`512p`、`768P`、`1080p`、`2K` | 4–30 整数秒；2K 最长 15 秒 |
 | Seedance 2.0 Mini | `seedance-2.0-mini` | `480p`、`720p` | 4–15 整数秒 |
+| Seedance 2.0 Fast | `seedance-2.0-fast` | `480p`、`720p` | 4–15 整数秒 |
 | Seedance 2.0 标准版 | `seedance-2.0` | `480p`、`720p`、`1080p`、`4k` | 4–15 整数秒 |
+| Seedance 2.5 | `seedance-2.5` | `480p`、`720p`、`1080p` | 4–30 整数秒 |
 
-秘塔实时模型配置可能有变化，以页面和服务校验为准。以上是脚本当前允许的配置，并非完整参数验证。H3 的 `fast_mode`、`context_ir_enabled` 不套用到 Seedance。素材方式和模型提示词分别按需读取 [H3 规则](references/minimax-h3-prompts.md) 或 [Seedance 规则](references/seedance-2-prompts.md)，并核对秘塔当前 API 示例的 `content` 类型、`role` 和素材限制；普通参考图不能当作首帧。
+秘塔实时模型配置可能有变化，以页面和服务校验为准。以上来自模型配置接口，页面可见选项可能不同（例如 H3 512p）；脚本仅做基础验证。H3 的 `fast_mode`、`context_ir_enabled` 不套用到 Seedance。素材方式和模型提示词按需读取 [H3 规则](references/minimax-h3-prompts.md) 或 [Seedance 2.0 规则](references/seedance-2-prompts.md)；Seedance 2.5 不应默认套用 2.0 的素材规则。核对秘塔当前 API 示例的 `content` 类型、`role` 和素材限制；普通参考图不能当作首帧。
 
 Seedance Mini 文生视频示例，标准版将 `model` 改为 `seedance-2.0`：
 
@@ -47,12 +49,29 @@ Seedance Mini 文生视频示例，标准版将 `model` 改为 `seedance-2.0`：
 4. 用 `python3 scripts/metaso.py status TASK_ID` 查询；网页示例使用 `task.status` 和 `task.content.url`。约每 15 秒查询并向用户更新；30 分钟无结果时保留任务 ID 并说明情况。
 5. 用 `python3 scripts/metaso.py download TASK_ID /绝对路径/result.mp4` 保存，不覆盖已有文件。检查视频时长、分辨率和实际画面；下载完成和画面符合要求分别说明。
 
-脚本可发送文档规定的完整 JSON，支持文档允许的素材 URL；没有独立文件上传功能。素材数量、有效 URL、参考素材费用及组合限制以秘塔当前页面为准。网页模型配置列出最多 9 张图、3 段视频、3 段音频；提示词优化、参考视频及额外图片可能产生费用，按当前报价核对。
+脚本可发送文档规定的完整 JSON。图片、视频、音频素材可使用 API 支持的 URL 或上传后的 `mm_file://`；先确认用户授权将指定文件发送至秘塔。模型配置列出 H3 和 Seedance 2.0 系列最多 9 张图、3 段视频、3 段音频，Seedance 2.5 最多 30 张图、10 段视频、10 段音频；具体组合与时长限制仍须核对当前 API 示例。提示词优化、参考视频及额外图片可能产生费用，按当前报价核对。
+
+## 素材上传和余额
+
+`python3 scripts/metaso.py upload /绝对路径/素材.png` 只预览本地文件信息；确认用户同意把该文件上传秘塔后加 `--submit`，返回的 `url` 可填入 `content` 相应的 `image_url.url`、`video_url.url` 或 `audio_url.url`。上传实现参照秘塔发布的 ComfyUI 节点，尚未对每种模型和素材格式实测；请勿输出文件内容或凭据。
+
+`python3 scripts/metaso.py balance` 查询 API Key 所属账户积分；同一账户串行查询。余额不是任务报价。
+
+H3 的素材项示例：首帧用 `{"type":"image_url","image_url":{"url":"素材URL"},"role":"first_frame"}`，尾帧的 role 为 `last_frame`；普通参考素材分别使用 `reference_image`、`reference_video`、`reference_audio`，类型和 URL 字段分别为 `image_url`、`video_url`、`audio_url`。官网还列出首尾帧与参考图混合示例。其他模型及素材组合必须先核对官网 API 示例，勿推断完全兼容。
+
+## H3 视频再生成 2K
+
+- `python3 scripts/metaso.py regenerate --task-id 任务ID` 预览；授权费用后加 `--submit` 创建任务。秘塔示例说明该方式需要白名单，源任务必须属于当前账户、状态为 `succeeded` 且在 7 天查询窗口内。
+- 源视频方式：准备 JSON，包含 `model: "MiniMax-H3"`、`resolution: "2K"` 和 `content`。`content` 必须原样包含源视频生成时最终提示词、全部原始素材，并且恰好包含一个 `type: "video_url"`、`role: "base_video"` 的源视频项。用 `python3 scripts/metaso.py regenerate --request /绝对路径/request.json` 预览，再按授权加 `--submit`。可选 `callback_url`、`aigc_watermark`。不得同时提供 `source_task_id` 和 `content`。
+- 源视频必须符合 H3 768P 输出规格：有音轨、24 fps、宽高均可被 32 整除、像素面积介于 768×768 和 768×1344；总帧数 107–362，按 17 帧递增；请求体不超过 64 MB。它不是任意视频的通用超分。脚本只检查基础结构，无法确认源任务归属、白名单、视频规格或原始素材完整性。
+- 创建后使用原有 `status` 和 `download` 命令。当前网页标示标准通道输出参考价 6.80 积分/秒，原素材可能另收费；提交前核对当前报价。再生成和上传均尚未用真实任务实测。
 
 ## 文档与边界
 
 - [秘塔页面与 API 示例](https://metaso.cn/minimax-h3)
 - [秘塔模型实时配置](https://metaso.cn/api/video-generation/models)
+- [秘塔 ComfyUI API 节点（含上传接口）](https://github.com/meta-sota/ComfyUI-MiniMaxH3-API)
+- [MiniMax H3 视频再生成 API](https://platform.minimaxi.com/docs/api-reference/video-generation-v2-regeneration)
 - [MiniMax H3 提示词基础指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md)
 - [MiniMax H3 提示词参考指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_ref_en.md)
 - [Seedance 2.0 系列提示词指南（火山方舟官方，首选）](https://docs.volcengine.com/docs/ark/seedance-2-0-prompt-guide?lang=zh)
@@ -61,4 +80,4 @@ Seedance Mini 文生视频示例，标准版将 `model` 改为 `seedance-2.0`：
 - [MiniMax 多模态请求规范](https://platform.minimaxi.com/docs/api-reference/video-generation-v2-create)
 - API 地址固定为 `https://metaso.cn/api/minimax`；网页内部接口与公开 API 不是同一套协议。
 
-Seedance 接口依据秘塔公开网页示例及模型配置编写，未以付费生成实测；遇到服务报错应保留原始信息并核对当前文档，不猜测重试。
+Seedance 接口依据秘塔公开网页示例及模型配置编写；新增 Fast、2.5 和 H3 512p 配置尚未以付费生成实测，不能据模型列表推断素材角色或请求协议完全相同。遇到服务报错应保留原始信息并核对当前文档，不猜测重试。
