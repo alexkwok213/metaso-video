@@ -59,6 +59,8 @@ Seedance Mini 文生视频示例，标准版将 `model` 改为 `seedance-2.0`：
 
 H3 的素材项示例：首帧用 `{"type":"image_url","image_url":{"url":"素材URL"},"role":"first_frame"}`，尾帧的 role 为 `last_frame`；普通参考素材分别使用 `reference_image`、`reference_video`、`reference_audio`，类型和 URL 字段分别为 `image_url`、`video_url`、`audio_url`。官网还列出首尾帧与参考图混合示例。其他模型及素材组合必须先核对官网 API 示例，勿推断完全兼容。
 
+秘塔当前 API 的图生视频示例中，Seedance 2.0 Mini、Fast、标准版和 Seedance 2.5 也将图片设为 `role: "first_frame"`，不能误发为 `reference_image`。这些示例仅证明首帧请求格式；尾帧、首尾帧及其混合组合要逐模型另行核实。脚本透传 `content`，不会自动从素材顺序判断帧角色。接入 MiniMax Design 等应用时，技能文档不会自动修改其自定义模型适配器：须逐模型检查模式选择、实际 `role` 映射、参数及请求预览，并明确区分离线检查与真实生成。
+
 ## H3 视频再生成 2K
 
 - `python3 scripts/metaso.py regenerate --task-id 任务ID` 预览；授权费用后加 `--submit` 创建任务。秘塔示例说明该方式需要白名单，源任务必须属于当前账户、状态为 `succeeded` 且在 7 天查询窗口内。
