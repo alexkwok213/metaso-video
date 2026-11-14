@@ -29,6 +29,15 @@ python3 -c 'import getpass,json,os,pathlib; p=pathlib.Path.home()/".config/metas
 
 秘塔实时模型配置可能有变化，以页面和服务校验为准。以上来自模型配置接口，页面可见选项可能不同（例如 H3 512p）；脚本仅做基础验证。H3 的 `fast_mode`、`context_ir_enabled` 不套用到 Seedance。素材方式和模型提示词按需读取 [H3 规则](references/minimax-h3-prompts.md) 或 [Seedance 2.0 规则](references/seedance-2-prompts.md)；Seedance 2.5 不应默认套用 2.0 的素材规则。核对秘塔当前 API 示例的 `content` 类型、`role` 和素材限制；普通参考图不能当作首帧。
 
+### 画幅与接入参数
+
+在 MiniMax Design 中新增、修改或排查模型接入时，先读 [Design 完整接入核对表](references/minimax-design-integration.md)。该表区分应用配置、秘塔请求字段和尚未验证的能力，不能只照模型与分辨率表填写。
+
+- 秘塔视频页面列出固定画幅 `21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`；火山方舟的视频生成文档也列出这些值及 `adaptive`。这是页面与模型方文档的证据，并非每个秘塔模型和素材组合均已实测。根据当前秘塔示例及服务校验确认适用性，不可把第三方参数直接当作秘塔保证。
+- 秘塔 API 请求字段是 `ratio`。若接入应用使用 `aspect_ratio` 命名，适配器须将所选值传到 `ratio`；仅给界面添加选项不足以证明请求生效。对文生、普通参考、首帧和首尾帧分别检查实际请求，保留 `adaptive` 跟随素材与固定比例的区别。秘塔 H3 首尾帧混合示例使用 `adaptive`；这不证明所有图生模式必须强制使用它。
+- 生成请求的核心参数为 `model`、`content`、`resolution`、`duration`、`ratio`。`content` 的素材类型与角色见下文；H3 可用 `fast_mode` 控制优先通道，`context_ir_enabled` 可覆盖控制台 H3 Context IR 设置，省略时沿用账户设置并可能收费。Seedance 不传 H3 专属开关。按当前秘塔示例核对水印、回调及其模型限制；不要把生成数量误当作单个任务参数。
+- 修改第三方自定义模型后，分别核验默认值、可选值、模式约束和组装后的请求，例如 `9:16`、`1:1`；保留原供应商、凭据和参考模式。离线检查、界面显示、线上实际生成分别报告，未验证不得声称已生效。
+
 Seedance Mini 文生视频示例，标准版将 `model` 改为 `seedance-2.0`：
 
 ```json
