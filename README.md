@@ -1,6 +1,8 @@
-# METASO 视频生成技能
+# METASO 图片与视频生成技能
 
 使用自己的秘塔 METASO API 余额，通过支持技能的 AI 助手调用 MiniMax H3、Seedance 2.0 Mini、Fast、标准版和 Seedance 2.5 生成视频、查询任务并下载结果。脚本默认预览请求，只有明确提交才创建付费任务。
+
+新增 **MiniMax-H3-Image**：文生图、单图编辑、最多三图参考编辑、自定义尺寸、提示词增强、幂等提交、任务查询与图片下载。完整参数及十种比例的1K/2K/4K尺寸见[图片接入说明](metaso-video/references/image-generation.md)。图片使用账号生图额度，与视频积分区分；默认预览，尚未真实生成实测。
 
 ## 安装
 

@@ -1,11 +1,11 @@
 ---
 name: metaso-video
-description: 使用 METASO（metaso.cn）账号生成视频、上传参考素材、将 H3 视频再生成 2K、查询余额或任务及下载结果时使用。
+description: 使用 METASO（metaso.cn）账号生成或编辑图片、生成视频、上传参考素材、将 H3 视频再生成 2K、查询余额或任务及下载结果时使用。
 ---
 
-# METASO 视频生成
+# METASO 图片与视频生成
 
-使用 METASO 的 API 余额生成视频，与其他平台账号余额独立。脚本 `scripts/metaso.py` 仅依赖 Python 3 标准库。模型和限制可能变化，使用前查看 https://metaso.cn/minimax-h3 的当前 API 示例及报价。
+使用 METASO 生成图片或视频；图片使用账号生图额度，视频使用 API 积分，与其他平台账号余额独立。脚本 `scripts/metaso.py` 仅依赖 Python 3 标准库。模型和限制可能变化，使用前查看 https://metaso.cn/minimax-h3 的当前 API 示例及报价。
 
 ## 首次配置密钥
 
@@ -16,6 +16,12 @@ python3 -c 'import getpass,json,os,pathlib; p=pathlib.Path.home()/".config/metas
 ```
 
 命令不会覆盖已有凭据；已有文件需要处理时由用户决定。不要把密钥放入项目、提示词、版本库或发往秘塔以外的站点。凭据失效时引导用户在秘塔控制台检查，不擅自新建、撤销或修改密钥和账号设置。已存在旧路径 `~/.config/metaso-h3/credentials.json` 的仍会被脚本读取作为回退，无需重新配置。
+
+## 图片生成与编辑
+
+图片任务先读[图片 API 参数、完整尺寸表和 Design 接入规则](references/image-generation.md)。支持 `MiniMax-H3-Image` 文生图、单图编辑和最多3图参考编辑，每任务一张图；提示词最多2000字符。图片请求使用 `prompt`、`size`、`reference_file_ids`、`enhance_prompt`，不套用下方视频参数。
+
+`image-create request.json` 默认预览，用户授权消耗生图额度后加 `--submit`；`image-status TASK_ID` 查询，`image-download TASK_ID /绝对路径/result.png` 下载。上传复用 `upload`，将返回的 `file_id` 放入图片请求。默认图片尺寸2560x1440、增强开启；可自定义尺寸。创建时CLI记录幂等UUID，提交结果未知时保留原参数和键，先查账户任务再决定重试；不自动重复消耗额度。
 
 ## 模型与请求
 

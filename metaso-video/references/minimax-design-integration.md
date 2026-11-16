@@ -2,6 +2,8 @@
 
 依据 2026-11-14 本机 Design 随应用打包的自定义模型 setup guide、模型输入 schema，以及秘塔页面/API 示例整理。Design 版本更新后先重新读取 `design.media-models/get_setup_guide`、`get_settings`、`get_model`；本文件不是应用所有未来字段的保证。秘塔模型参数以 https://metaso.cn/minimax-h3 和 https://metaso.cn/api/video-generation/models 为准。
 
+图片模型使用独立 `type=image`，其接口、素材、尺寸与额度规则见[图片模型接入](image-generation.md)。下表及五模型覆盖记录原指视频，不能直接套用于图片。
+
 ## 1. 三层必须分别填写
 
 技能是 agent 的操作说明；Design 的 spec 决定可选输入；adapter 决定实际发送内容。修改文档不会自动更新 spec 或 adapter。可选项出现、离线请求正确和真实生成成功分别验收。

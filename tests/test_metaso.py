@@ -74,6 +74,7 @@ class NewFeaturesTest(unittest.TestCase):
                 self.assertIn(b'video_generation_input', request.data)
                 self.assertIn(b'image-data', request.data)
                 self.assertEqual(result['url'], 'mm_file://123')
+                self.assertEqual(result['file_id'], '123')
 
     def test_existing_h3_settings(self):
         metaso.validate(self.payload('MiniMax-H3', '768P', 30))
@@ -91,6 +92,68 @@ class NewFeaturesTest(unittest.TestCase):
             with self.subTest(model=model, resolution=resolution, duration=duration):
                 with self.assertRaises(ValueError):
                     metaso.validate(self.payload(model, resolution, duration))
+
+class ImageTest(unittest.TestCase):
+    def test_image_defaults_and_custom_boundaries(self):
+        for size in [None, "655360x1", "768x1376", "1280x512", "5000x4000", "7104x2368", "1025x1023", "1000x1000"]:
+            payload = {"prompt": "a paper boat"}
+            if size is not None:
+                payload["size"] = size
+            if size == "655360x1":
+                with self.assertRaises(ValueError):
+                    metaso.validate_image(payload)
+            else:
+                metaso.validate_image(payload)
+        metaso.validate_image({"prompt": "x" * 2000, "size": "768x2304", "reference_file_ids": ["1", "2", "3"], "enhance_prompt": False})
+
+    def test_invalid_image_requests(self):
+        for fields in [{"prompt": ""}, {"prompt": "x" * 2001}, {"model": "MiniMax-H3"},
+                       {"size": "100x100"}, {"size": "10000x10000"}, {"size": "4000x1000"},
+                       {"size": "0x1000"}, {"size": "1024*1024"}, {"size": 1024},
+                       {"reference_file_ids": ["1", "2", "3", "4"]},
+                       {"reference_file_ids": [""]}, {"reference_file_ids": [1]},
+                       {"reference_file_ids": "123"}, {"enhance_prompt": "false"}, {"seed": 12},
+                       {"aspect_ratio": "16:9"}]:
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                metaso.validate_image({"prompt": "a boat", **fields})
+
+    def test_image_submit_and_preview(self):
+        idem = "80c893a0-8d62-4ed3-8c46-548ee84173ad"
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "image.json"
+            payload = {"prompt": "a boat", "reference_file_ids": ["123"], "enhance_prompt": False}
+            f.write_text(json.dumps(payload))
+            for submit in [False, True]:
+                argv = ["metaso.py", "image-create", str(f), "--idempotency-key", idem] + (["--submit"] if submit else [])
+                with patch.object(metaso.sys, "argv", argv), patch.object(metaso, "api", return_value={"task_id": "1"}) as api, patch("sys.stdout", new_callable=io.StringIO) as output, patch("sys.stderr", new_callable=io.StringIO):
+                    metaso.main()
+                    if submit:
+                        api.assert_called_once_with("/v2/image_generation", payload, idempotency_key=idem)
+                    else:
+                        api.assert_not_called()
+                    self.assertEqual(json.loads(output.getvalue())["idempotency_key"], idem)
+
+    def test_image_query_and_download(self):
+        with tempfile.TemporaryDirectory() as d:
+            output = Path(d) / "image.png"
+            task = {"task": {"status": "succeeded", "content": {"url": "https://example.com/image.png"}}}
+            with patch.object(metaso.sys, "argv", ["metaso.py", "image-download", "123", str(output)]), patch.object(metaso, "api", return_value=task) as api, patch.object(metaso.urllib.request, "urlopen") as fetch, patch("sys.stdout", new_callable=io.StringIO):
+                fetch.return_value.__enter__.return_value = io.BytesIO(b"image bytes")
+                metaso.main()
+                api.assert_called_once_with("/v2/query/image_generation/123")
+                fetch.assert_called_once_with("https://example.com/image.png", timeout=60)
+                self.assertEqual(output.read_bytes(), b"image bytes")
+                with self.assertRaises(FileExistsError):
+                    metaso.main()
+
+    def test_idempotency_header(self):
+        idem = "80c893a0-8d62-4ed3-8c46-548ee84173ad"
+        with patch.object(metaso, "load_key", return_value="test-key"), patch.object(metaso.urllib.request, "urlopen") as urlopen:
+            urlopen.return_value.__enter__.return_value.read.return_value = b'{"task_id":"123"}'
+            metaso.api("/v2/image_generation", {"prompt": "a boat"}, idempotency_key=idem)
+            request = urlopen.call_args.args[0]
+            self.assertEqual(request.get_header("Idempotency-key"), idem)
+            self.assertEqual(request.get_header("Authorization"), "Bearer test-key")
 
 if __name__ == '__main__':
     unittest.main()

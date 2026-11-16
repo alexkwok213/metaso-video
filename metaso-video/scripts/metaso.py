@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""METASO video generation API: submit a request, inspect a task, download its result."""
+"""METASO image and video generation API: submit a request, inspect a task, download its result."""
 import argparse
 import json
 import os
@@ -26,14 +26,17 @@ def load_key():
     return None
 
 
-def api(path, payload=None, body=None, content_type="application/json"):
+def api(path, payload=None, body=None, content_type="application/json", idempotency_key=None):
     key = load_key()
     if not key:
         raise ValueError("未配置 METASO API Key。请参照技能说明在本机配置 METASO_API_KEY 或凭据文件；不要在聊天中发送密钥。")
+    headers = {"Authorization": "Bearer " + key, "Content-Type": content_type}
+    if idempotency_key is not None:
+        headers["Idempotency-Key"] = str(uuid.UUID(idempotency_key))
     request = urllib.request.Request(
         BASE + path,
         data=body if body is not None else (json.dumps(payload).encode() if payload is not None else None),
-        headers={"Authorization": "Bearer " + key, "Content-Type": content_type},
+        headers=headers,
     )
     try:
         with urllib.request.urlopen(request, timeout=60) as response:
@@ -56,10 +59,36 @@ def upload(path):
     result = api('/v1/files/upload', body=body, content_type='multipart/form-data; boundary=' + boundary)
     info = result.get('file') or {}
     if info.get('file_id') is not None:
-        return {'url': 'mm_file://' + str(info['file_id'])}
+        return {'url': 'mm_file://' + str(info['file_id']), 'file_id': str(info['file_id'])}
     if info.get('download_url'):
         return {'url': info['download_url']}
     raise ValueError('Upload response has no file_id or download_url')
+
+
+def validate_image(payload):
+    if not isinstance(payload, dict):
+        raise ValueError("Image request must be an object")
+    unknown = set(payload) - {"model", "prompt", "size", "reference_file_ids", "enhance_prompt"}
+    if unknown:
+        raise ValueError("Undocumented METASO image fields: " + ", ".join(sorted(unknown)))
+    if payload.get("model", "MiniMax-H3-Image") != "MiniMax-H3-Image":
+        raise ValueError("Unsupported image model")
+    prompt = payload.get("prompt")
+    if not isinstance(prompt, str) or not 1 <= len(prompt) <= 2000:
+        raise ValueError("Image prompt must contain 1–2000 characters")
+    size = payload.get("size", "2560x1440")
+    if not isinstance(size, str) or not re.fullmatch(r"[1-9][0-9]*x[1-9][0-9]*", size):
+        raise ValueError("Image size must use WIDTHxHEIGHT")
+    width, height = map(int, size.split("x"))
+    if not 655360 <= width * height <= 20000000 or width > 3 * height or height > 3 * width:
+        raise ValueError("Image area must be 655360–20000000 pixels and ratio 1:3–3:1")
+    references = payload.get("reference_file_ids", [])
+    if not isinstance(references, list) or len(references) > 3 or any(
+        not isinstance(item, str) or not item.strip() for item in references
+    ):
+        raise ValueError("Provide at most 3 uploaded image file IDs as nonempty strings")
+    if "enhance_prompt" in payload and type(payload["enhance_prompt"]) is not bool:
+        raise ValueError("enhance_prompt must be boolean")
 
 
 def validate_regeneration(payload):
@@ -107,6 +136,10 @@ def main():
     create = commands.add_parser("create")
     create.add_argument("request", type=Path, help="JSON request body")
     create.add_argument("--submit", action="store_true", help="Submit one billable task")
+    image = commands.add_parser("image-create")
+    image.add_argument("request", type=Path, help="Image JSON request body")
+    image.add_argument("--submit", action="store_true", help="Consume one image generation quota")
+    image.add_argument("--idempotency-key", help="UUID; reuse with identical parameters after an uncertain submission")
     regenerate = commands.add_parser("regenerate")
     source = regenerate.add_mutually_exclusive_group(required=True)
     source.add_argument("--task-id")
@@ -116,16 +149,24 @@ def main():
     upload_command = commands.add_parser("upload")
     upload_command.add_argument("file", type=Path)
     upload_command.add_argument("--submit", action="store_true", help="Upload the file to METASO")
-    for name in ("status", "download"):
+    for name in ("status", "download", "image-status", "image-download"):
         command = commands.add_parser(name)
         command.add_argument("task_id")
-        if name == "download":
+        if name.endswith("download"):
             command.add_argument("output", type=Path)
     args = parser.parse_args()
     if args.command == "create":
         payload = json.loads(args.request.read_text())
         validate(payload)
         result = api("/v2/video_generation", payload) if args.submit else {"dry_run": True, "request": payload}
+    elif args.command == "image-create":
+        payload = json.loads(args.request.read_text())
+        validate_image(payload)
+        idem = str(uuid.UUID(args.idempotency_key)) if args.idempotency_key else str(uuid.uuid4())
+        if args.submit:
+            print("Image Idempotency-Key: " + idem, file=sys.stderr)
+        result = api("/v2/image_generation", payload, idempotency_key=idem) if args.submit else {"dry_run": True, "request": payload}
+        result["idempotency_key"] = idem
     elif args.command == "regenerate":
         payload = json.loads(args.request.read_text()) if args.request else {"model": "MiniMax-H3", "source_task_id": args.task_id, "resolution": "2K"}
         validate_regeneration(payload)
@@ -139,11 +180,12 @@ def main():
     else:
         if not re.fullmatch(r"[A-Za-z0-9_-]+", args.task_id):
             raise ValueError("Invalid task ID")
-        result = api("/v2/query/video_generation/" + args.task_id)
-        if args.command == "download":
+        kind = "image_generation" if args.command.startswith("image-") else "video_generation"
+        result = api("/v2/query/" + kind + "/" + args.task_id)
+        if args.command.endswith("download"):
             url = ((result.get("task") or {}).get("content") or {}).get("url")
             if not url or not url.startswith("https://"):
-                raise ValueError("Task has no HTTPS video result yet")
+                raise ValueError("Task has no HTTPS result yet")
             args.output.parent.mkdir(parents=True, exist_ok=True)
             # No API credential is forwarded to the result host.
             with urllib.request.urlopen(url, timeout=60) as source, args.output.open("xb") as dest:
