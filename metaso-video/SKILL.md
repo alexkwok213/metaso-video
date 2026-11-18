@@ -104,6 +104,7 @@ H3 的素材项示例：首帧用 `{"type":"image_url","image_url":{"url":"素�
 - [MiniMax H3 视频再生成 API](https://platform.minimaxi.com/docs/api-reference/video-generation-v2-regeneration)
 - [MiniMax H3 提示词基础指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md)
 - [MiniMax H3 提示词参考指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_ref_en.md)
+- [Seedance 2.0 系列 API 教程](https://console.volcengine.com/ark/region:cn-beijing/docs/seedance-2-0)
 - [Seedance 2.0 系列提示词指南（火山方舟官方，首选）](https://docs.volcengine.com/docs/ark/seedance-2-0-prompt-guide?lang=zh)
 - [Seedance 2.5 官方提示词指南](https://docs.volcengine.com/docs/ark/seedance-2-5-prompt-guide?lang=zh)
 - [Seedance 2.5 小云雀官方教程](https://xyq.jianying.com/tutorials/seedance-2-5-prompt-guide)
