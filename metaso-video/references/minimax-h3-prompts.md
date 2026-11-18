@@ -1,6 +1,6 @@
 # MiniMax H3 提示词官方指南（要点摘编）
 
-本文件把 MiniMax 官方提示词文档的结构与硬性规则整理成中文，便于写 H3 请求时使用。完整英文原文见下方来源；字段名、标签和示例一律保留英文，因为 H3 实际接受的就是这种格式。
+核对日期：2026-11-18，已重新读取下列两份官方原文。本文件整理的是官方提示词重写格式，适用于H3视频的不同素材模式；它不是秘塔API强制要求的JSON schema，也不表示自然语言提示词一律无效。下面的英文段名和标签按官方重写格式保留，用户台词与画面文字保留原文。
 
 - 官方基础指南（T2VA / I2VA / FL2VA / L2VA）：https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md
 - 官方参考指南（Full-Reference 六段式）：https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_ref_en.md
@@ -66,8 +66,15 @@ non_diegetic_music: ...
 | `overall_soundscape` | 汇总环境与物理声音 |
 | `non_diegetic_music` | 描述只有观众能听到的背景音乐 |
 
-引用标签四类：`<Subject N>`（可复用/可修改的可见内容）、`<Picture N>`（作为具体目标帧或构图锚点的参考图）、`<Video N>`（提供剪辑源、续写起点或整段时间结构的参考视频）、`<Audio N>`（被复制或引用的音频信号）。标签一旦分配，在六个段落中含义保持不变。`detailed_description` 生成任务一般 350–500 英文词；镜头格式、运镜、说话人 ID、`<d>`、`<scenetrans>`/`<cutoff>` 规则与基础指南一致。`summary` 用方括号任务类型前缀，如 `[reference generation]`、`[video editing + reference generation + audio reuse]`。关系标记：`fully_preserved`/`partially_preserved`/`attribute_transfer`/`weak_reference`（可见内容），`fully_copy`/`partially_copy`/`reference`/`weak_reference`（音频）。
+引用标签四类：`<Subject N>`（可复用/可修改的可见内容）、`<Picture N>`（作为具体目标帧或构图锚点的参考图）、`<Video N>`（提供剪辑源、续写起点或整段时间结构的参考视频）、`<Audio N>`（被复制或引用的音频信号）。标签一旦分配，在六个段落中含义保持不变。`detailed_description` 生成任务一般 350–500 英文词；对白密集时优先容纳完整对白，视频编辑按源片复杂度调整，不机械凑字数；镜头格式、运镜、说话人 ID、`<d>`、`<scenetrans>`/`<cutoff>` 规则与基础指南一致。`summary` 用方括号任务类型前缀，如 `[reference generation]`、`[video editing + reference generation + audio reuse]`。关系标记：`fully_preserved`/`partially_preserved`/`attribute_transfer`/`weak_reference`（可见内容），`fully_copy`/`partially_copy`/`reference`/`weak_reference`（音频）。
 
 ## 6. 与 Seedance 的区别
 
-H3 的这一套三段/六段英文结构、`<d>`/`<Subject N>`/`<Picture N>` 标签是 H3 专属的提示词组织方式，不是 Seedance 的通用格式，也不要把它当作 API JSON 的必填字段。Seedance 用自然语言描述期望画面，参考素材按角色逐一说明即可，见 [Seedance 2.0 提示词指南](seedance-2-prompts.md)。
+H3 的这一套三段/六段英文结构、`<d>`/`<Subject N>`/`<Picture N>` 标签是 H3 专属的提示词组织方式，不是 Seedance 的通用格式，也不要把它当作 API JSON 的必填字段。Seedance 用自然语言描述期望画面，参考素材按角色逐一说明即可，见 [Seedance 2.0系列](seedance-2-prompts.md) 或 [Seedance 2.5](seedance-2.5-prompts.md)。H3 Image 另读[图片指南](image-generation.md)，不使用这里的视频字段。
+
+
+## 7. 使用前与生成后核对
+
+先按content中的实际role选择上面的模式。首尾帧与额外参考图混合时，同时说明端点对齐与其他参考素材职责；不把普通参考图自动视为端点。提示词里的Picture编号与请求素材映射应逐项核对。具体素材数量、分辨率、时长、IR/优先通道开关和再生成限制见[主技能](../SKILL.md)，不从写作模板反推API能力。
+
+生成后检查端点画面、动作因果、跨镜身份、对白语言与原文、环境声/配乐分工；格式正确不代表效果已满足。H3再生成2K应保留原任务最终提示词及全部原素材，不能把重新写过的提示词冒充原请求。

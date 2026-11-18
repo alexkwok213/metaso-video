@@ -33,7 +33,20 @@ python3 -c 'import getpass,json,os,pathlib; p=pathlib.Path.home()/".config/metas
 | Seedance 2.0 标准版 | `seedance-2.0` | `480p`、`720p`、`1080p`、`4k` | 4–15 整数秒 |
 | Seedance 2.5 | `seedance-2.5` | `480p`、`720p`、`1080p` | 4–30 整数秒 |
 
-秘塔实时模型配置可能有变化，以页面和服务校验为准。以上来自模型配置接口，页面可见选项可能不同（例如 H3 512p）；脚本仅做基础验证。H3 的 `fast_mode`、`context_ir_enabled` 不套用到 Seedance。素材方式和模型提示词按需读取 [H3 规则](references/minimax-h3-prompts.md) 或 [Seedance 2.0 规则](references/seedance-2-prompts.md)；Seedance 2.5 不应默认套用 2.0 的素材规则。核对秘塔当前 API 示例的 `content` 类型、`role` 和素材限制；普通参考图不能当作首帧。
+秘塔实时模型配置可能有变化，以页面和服务校验为准。以上来自模型配置接口，页面可见选项可能不同（例如 H3 512p）；脚本仅做基础验证。H3 的 `fast_mode`、`context_ir_enabled` 不套用到 Seedance。写提示词或准备参考素材前，按下表读取相应规则；先区分任务类型，再组装参数，不能只看分辨率和数量。核对秘塔当前 API 示例的 `content` 类型、`role` 和素材限制；普通参考图不能当作首帧。
+
+### 生成规则索引（2026-11-18核对）
+
+| 模型 | 必读规则 | 覆盖与边界 |
+|---|---|---|
+| MiniMax H3 视频 | [H3指南](references/minimax-h3-prompts.md) | 文生、首帧、尾帧、首尾帧、全参考；镜头、对白与声音格式；不是JSON必填字段 |
+| Seedance 2.0 标准版 | [2.0系列指南](references/seedance-2-prompts.md) | 主体绑定、分镜、动作、声音；模型方编辑/延长与秘塔接入分开核验 |
+| Seedance 2.0 Mini | [2.0系列指南](references/seedance-2-prompts.md) | 共用写作方法，使用Mini自己的参数限制 |
+| Seedance 2.0 Fast | [2.0系列指南](references/seedance-2-prompts.md) | 共用写作方法，使用Fast自己的参数限制；不推断效果或功能完全相同 |
+| Seedance 2.5 | [2.5独立指南](references/seedance-2.5-prompts.md) | 时间戳、素材职责、长片段、编辑/延长参数锁定；秘塔未验证能力明确标注 |
+| MiniMax H3 Image | [图片指南](references/image-generation.md) | 文生图、单/多图编辑、保持/修改范围、文字与构图；不套H3视频格式 |
+
+这些规则分别记录模型方写法、秘塔参数与已验证范围。`create`只做基础JSON校验，不验证故事逻辑、素材像素、角色组合或所有提示词规则；通过dry-run不代表这些规则都已检查。具体参数仍以当前秘塔配置和示例为准。
 
 ### 画幅与接入参数
 
@@ -92,6 +105,8 @@ H3 的素材项示例：首帧用 `{"type":"image_url","image_url":{"url":"素�
 - [MiniMax H3 提示词基础指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md)
 - [MiniMax H3 提示词参考指南（官方）](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_ref_en.md)
 - [Seedance 2.0 系列提示词指南（火山方舟官方，首选）](https://docs.volcengine.com/docs/ark/seedance-2-0-prompt-guide?lang=zh)
+- [Seedance 2.5 官方提示词指南](https://docs.volcengine.com/docs/ark/seedance-2-5-prompt-guide?lang=zh)
+- [Seedance 2.5 小云雀官方教程](https://xyq.jianying.com/tutorials/seedance-2-5-prompt-guide)
 - [Seedance 2.0 创作指南（Runway，可作补充参考）](https://help.runwayml.com/hc/en-us/articles/50488490233363-Creating-with-Seedance-2.0)
 - [Seedance 2.0 官方介绍](https://seed.bytedance.com/en/seedance2_0)
 - [MiniMax 多模态请求规范](https://platform.minimaxi.com/docs/api-reference/video-generation-v2-create)
