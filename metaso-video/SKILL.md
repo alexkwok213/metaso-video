@@ -19,7 +19,7 @@ python3 -c 'import getpass,json,os,pathlib; p=pathlib.Path.home()/".config/metas
 
 ## 图片生成与编辑
 
-图片任务先读[图片 API 参数、完整尺寸表和 Design 接入规则](references/image-generation.md)。支持 `MiniMax-H3-Image` 文生图、单图编辑和最多3图参考编辑，每任务一张图；提示词最多2000字符。图片请求使用 `prompt`、`size`、`reference_file_ids`、`enhance_prompt`，不套用下方视频参数。
+图片任务先读[H3 Image提示词规则](references/minimax-h3-image-prompts.md)，再读[图片 API 参数、完整尺寸表和 Design 接入规则](references/image-generation.md)。支持 `MiniMax-H3-Image` 文生图、单图编辑和最多3图参考编辑，每任务一张图；提示词最多2000字符。图片请求使用 `prompt`、`size`、`reference_file_ids`、`enhance_prompt`，不套用下方视频参数。
 
 `image-create request.json` 默认预览，用户授权消耗生图额度后加 `--submit`；`image-status TASK_ID` 查询，`image-download TASK_ID /绝对路径/result.png` 下载。上传复用 `upload`，将返回的 `file_id` 放入图片请求。默认图片尺寸2560x1440、增强开启；可自定义尺寸。创建时CLI记录幂等UUID，提交结果未知时保留原参数和键，先查账户任务再决定重试；不自动重复消耗额度。
 
@@ -44,7 +44,7 @@ python3 -c 'import getpass,json,os,pathlib; p=pathlib.Path.home()/".config/metas
 | Seedance 2.0 Mini | [2.0系列指南](references/seedance-2-prompts.md) | 共用写作方法，使用Mini自己的参数限制 |
 | Seedance 2.0 Fast | [2.0系列指南](references/seedance-2-prompts.md) | 共用写作方法，使用Fast自己的参数限制；不推断效果或功能完全相同 |
 | Seedance 2.5 | [2.5独立指南](references/seedance-2.5-prompts.md) | 时间戳、素材职责、长片段、编辑/延长参数锁定；秘塔未验证能力明确标注 |
-| MiniMax H3 Image | [图片指南](references/image-generation.md) | 文生图、单/多图编辑、保持/修改范围、文字与构图；不套H3视频格式 |
+| MiniMax H3 Image | [提示词指南](references/minimax-h3-image-prompts.md) + [图片API](references/image-generation.md) | 英文最终描述与增强流程、文生/编辑保留关系、文字与构图；不套H3视频格式 |
 
 这些规则分别记录模型方写法、秘塔参数与已验证范围。`create`只做基础JSON校验，不验证故事逻辑、素材像素、角色组合或所有提示词规则；通过dry-run不代表这些规则都已检查。具体参数仍以当前秘塔配置和示例为准。
 

@@ -31,7 +31,7 @@ Seedance 接口根据秘塔公开 API 示例及模型配置接入；新增模型
 | MiniMax H3 视频 | [文生/首尾帧/全参考、镜头与声音](metaso-video/references/minimax-h3-prompts.md) |
 | Seedance 2.0 标准版、Mini、Fast | [共用写作方法与逐款参数边界](metaso-video/references/seedance-2-prompts.md) |
 | Seedance 2.5 | [独立指南：时间戳、任务锁定、素材映射与编辑/延长门槛](metaso-video/references/seedance-2.5-prompts.md) |
-| MiniMax H3 Image | [文生图、编辑、文字与构图、尺寸及素材限制](metaso-video/references/image-generation.md) |
+| MiniMax H3 Image | [官方提示词/扩写与编辑规则](metaso-video/references/minimax-h3-image-prompts.md)；[尺寸及素材限制](metaso-video/references/image-generation.md) |
 
 完整索引在[主技能](metaso-video/SKILL.md)。模型方能力不等于秘塔已开放；例如2.5严格编辑所需的自动时长目前不在CLI已支持范围。文档更新不会自动修改MiniMax Design中已保存的模型guide或adapter。
 
